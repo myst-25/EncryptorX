@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Military-grade AES-256-GCM encryption in your browser">
+    <meta name="description" content="Military-grade AES-256-GCM encryption for secure two-person communication">
     <meta name="theme-color" content="#7c3aed">
-    <title>EncryptorX - Secure Text Encryption</title>
+    <title>EncryptorX - Secure Two-Person Communication</title>
     <link rel="manifest" href="manifest.json">
     <link rel="icon" type="image/svg+xml" href="icon.svg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -348,6 +348,163 @@
             background-color: rgba(245, 245, 255, 0.8);
             border-bottom: 1px solid #e0e0ff;
         }
+
+        /* Chat styles */
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            height: 500px;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        body.dark-mode .chat-messages {
+            background-color: #0f0f1a;
+            border: 1px solid #2d2d44;
+        }
+
+        body.light-mode .chat-messages {
+            background-color: #f9f9ff;
+            border: 1px solid #e0e0ff;
+        }
+
+        .message {
+            display: flex;
+            gap: 12px;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.sent {
+            justify-content: flex-end;
+        }
+
+        .message.received {
+            justify-content: flex-start;
+        }
+
+        .message-bubble {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            word-wrap: break-word;
+            word-break: break-word;
+        }
+
+        .message.sent .message-bubble {
+            background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+            color: white;
+        }
+
+        body.dark-mode .message.received .message-bubble {
+            background-color: #2d2d44;
+            color: #e0e0ff;
+        }
+
+        body.light-mode .message.received .message-bubble {
+            background-color: #e0e0ff;
+            color: #1a1a2e;
+        }
+
+        .message-time {
+            font-size: 12px;
+            opacity: 0.6;
+            align-self: flex-end;
+            margin-top: 4px;
+        }
+
+        .message-sender {
+            font-size: 12px;
+            font-weight: 600;
+            opacity: 0.7;
+            margin-bottom: 4px;
+        }
+
+        .chat-input-area {
+            padding: 16px;
+            border-top: 1px solid;
+            display: flex;
+            gap: 12px;
+        }
+
+        body.dark-mode .chat-input-area {
+            border-top-color: #2d2d44;
+            background-color: #1a1a2e;
+        }
+
+        body.light-mode .chat-input-area {
+            border-top-color: #e0e0ff;
+            background-color: #ffffff;
+        }
+
+        .chat-input-area textarea {
+            flex: 1;
+            min-height: 40px;
+            max-height: 100px;
+            padding: 10px;
+            border: 1px solid;
+            border-radius: 8px;
+            resize: vertical;
+        }
+
+        .chat-input-area button {
+            align-self: flex-end;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .user-name-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid;
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+
+        .clear-chat-btn {
+            background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .clear-chat-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .encrypted-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 11px;
+            opacity: 0.6;
+            margin-top: 4px;
+        }
     </style>
 </head>
 <body class="dark-mode">
@@ -371,15 +528,15 @@
     </nav>
 
     <!-- Main Container -->
-    <div class="max-w-4xl mx-auto px-4 py-8">
+    <div class="max-w-6xl mx-auto px-4 py-8">
         <!-- Hero Section -->
         <div class="text-center mb-12">
             <svg class="lock-icon mx-auto mb-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
                 <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
             </svg>
-            <h2 class="text-4xl font-bold mb-3">Your Text. Your Key. Nobody Else.</h2>
-            <p class="text-lg opacity-70 mb-6">Military-grade AES-256-GCM encryption — unique per user</p>
+            <h2 class="text-4xl font-bold mb-3">Secure Two-Person Communication</h2>
+            <p class="text-lg opacity-70 mb-6">Military-grade AES-256-GCM encryption — share messages safely</p>
             <div class="flex justify-center">
                 <span class="status-badge unready" id="statusBadge">
                     <span class="text-xl">🔴</span>
@@ -390,23 +547,30 @@
 
         <!-- Credentials Card -->
         <div class="card p-8 mb-8" id="credentialsCard">
-            <h3 class="text-2xl font-bold mb-6">Setup Your Key</h3>
+            <h3 class="text-2xl font-bold mb-6">Setup Shared Key</h3>
+            <p class="text-sm opacity-70 mb-6">Both users must enter the same ACCSI number and password to communicate securely.</p>
             
             <div class="mb-6">
-                <label class="block text-sm font-medium mb-2">ACCSI Number</label>
+                <label class="block text-sm font-medium mb-2">ACCSI Number (Shared)</label>
                 <input type="number" id="accsiInput" placeholder="e.g. 8829" class="w-full px-4 py-3 border-2 rounded-lg" min="0" max="999999999999">
-                <p class="text-xs opacity-50 mt-2">4-12 digits</p>
+                <p class="text-xs opacity-50 mt-2">4-12 digits - Both users must use the same number</p>
             </div>
 
             <div class="mb-6">
-                <label class="block text-sm font-medium mb-2">Password</label>
+                <label class="block text-sm font-medium mb-2">Password (Shared)</label>
                 <div class="relative">
                     <input type="password" id="passwordInput" placeholder="Enter password" class="w-full px-4 py-3 border-2 rounded-lg pr-10">
                     <button type="button" id="togglePasswordBtn" class="absolute right-3 top-3 eye-toggle">
                         <i class="fas fa-eye"></i>
                     </button>
                 </div>
-                <p class="text-xs opacity-50 mt-2">Min 8 chars, must include: ! @ # $ % ^ & * ( )</p>
+                <p class="text-xs opacity-50 mt-2">Min 8 chars, must include: ! @ # $ % ^ & * ( ) - Both users must use the same password</p>
+            </div>
+
+            <div class="mb-6">
+                <label class="block text-sm font-medium mb-2">Your Name</label>
+                <input type="text" id="userNameInput" placeholder="e.g. Alice" class="w-full px-4 py-3 border-2 rounded-lg">
+                <p class="text-xs opacity-50 mt-2">Used to identify your messages in the chat</p>
             </div>
 
             <div class="mb-6">
@@ -422,102 +586,45 @@
 
             <button id="loadKeyBtn" class="btn-primary w-full text-white px-6 py-3 rounded-lg font-medium flex items-center justify-center gap-2">
                 <i class="fas fa-key"></i>
-                Load Key
+                Load Key & Start Chat
             </button>
         </div>
 
-        <!-- Encrypt/Decrypt Card -->
-        <div class="card p-8 mb-8" id="cryptoCard" style="display: none;">
-            <div class="tabs" id="tabs">
-                <button class="tab-btn active" data-tab="encrypt">
-                    <i class="fas fa-lock"></i> Encrypt
-                </button>
-                <button class="tab-btn" data-tab="decrypt">
-                    <i class="fas fa-lock-open"></i> Decrypt
+        <!-- Chat Card -->
+        <div class="card p-8 mb-8" id="chatCard" style="display: none;">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold">Secure Chat</h3>
+                <button id="clearChatBtn" class="clear-chat-btn">
+                    <i class="fas fa-trash"></i> Clear Chat
                 </button>
             </div>
 
-            <!-- Encrypt Tab -->
-            <div class="tab-content active" id="encrypt-tab">
-                <div class="mb-6">
-                    <label class="block text-sm font-medium mb-2">Text to Encrypt</label>
-                    <textarea id="encryptInput" placeholder="Enter text to encrypt..." rows="6" class="w-full px-4 py-3 border-2 rounded-lg"></textarea>
-                </div>
-
-                <div class="mb-6">
-                    <label class="block text-sm font-medium mb-2">Or Upload File</label>
-                    <div class="file-input-wrapper">
-                        <input type="file" id="encryptFileInput">
-                        <button type="button" id="encryptFileBtn" class="w-full btn-primary text-white px-4 py-3 rounded-lg font-medium flex items-center justify-center gap-2">
-                            <i class="fas fa-upload"></i>
-                            Choose File
-                        </button>
+            <div class="chat-container">
+                <div class="chat-messages" id="chatMessages">
+                    <div class="text-center opacity-50 text-sm">
+                        <p>Chat started. Messages are encrypted end-to-end.</p>
                     </div>
                 </div>
-
-                <button id="encryptBtn" class="btn-primary w-full text-white px-6 py-3 rounded-lg font-medium flex items-center justify-center gap-2 mb-6">
-                    <i class="fas fa-bolt"></i>
-                    Encrypt
-                </button>
-
-                <div class="mb-4">
-                    <label class="block text-sm font-medium mb-2">Encrypted Output</label>
-                    <textarea id="encryptOutput" placeholder="Encrypted text will appear here..." rows="4" class="w-full px-4 py-3 border-2 rounded-lg" readonly></textarea>
-                </div>
-
-                <div class="flex gap-3">
-                    <button id="copyEncryptBtn" class="copy-btn flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium flex items-center justify-center gap-2" style="display: none;">
-                        <i class="fas fa-copy"></i>
-                        Copy
-                    </button>
-                    <button id="downloadEncryptBtn" class="download-btn flex-1 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium flex items-center justify-center gap-2" style="display: none;">
-                        <i class="fas fa-download"></i>
-                        Download .enc
+                <div class="chat-input-area">
+                    <textarea id="messageInput" placeholder="Type your message..." rows="1"></textarea>
+                    <button id="sendBtn" class="btn-primary text-white font-medium flex items-center gap-2">
+                        <i class="fas fa-paper-plane"></i>
+                        Send
                     </button>
                 </div>
             </div>
 
-            <!-- Decrypt Tab -->
-            <div class="tab-content" id="decrypt-tab">
-                <div class="mb-6">
-                    <label class="block text-sm font-medium mb-2">Encrypted Text</label>
-                    <textarea id="decryptInput" placeholder="Paste encrypted text..." rows="6" class="w-full px-4 py-3 border-2 rounded-lg"></textarea>
-                </div>
-
-                <div class="mb-6">
-                    <label class="block text-sm font-medium mb-2">Or Upload .enc File</label>
-                    <div class="file-input-wrapper">
-                        <input type="file" id="decryptFileInput" accept=".enc">
-                        <button type="button" id="decryptFileBtn" class="w-full btn-primary text-white px-4 py-3 rounded-lg font-medium flex items-center justify-center gap-2">
-                            <i class="fas fa-upload"></i>
-                            Choose File
-                        </button>
-                    </div>
-                </div>
-
-                <button id="decryptBtn" class="btn-success w-full text-white px-6 py-3 rounded-lg font-medium flex items-center justify-center gap-2 mb-6">
-                    <i class="fas fa-unlock"></i>
-                    Decrypt
-                </button>
-
-                <div class="mb-4">
-                    <label class="block text-sm font-medium mb-2">Decrypted Output</label>
-                    <textarea id="decryptOutput" placeholder="Decrypted text will appear here..." rows="4" class="w-full px-4 py-3 border-2 rounded-lg" readonly></textarea>
-                </div>
-
-                <button id="copyDecryptBtn" class="copy-btn flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium flex items-center justify-center gap-2" style="display: none;">
-                    <i class="fas fa-copy"></i>
-                    Copy
-                </button>
+            <div class="mt-4 text-center text-xs opacity-60">
+                <p>🔒 All messages are encrypted with AES-256-GCM. Nothing is sent to any server.</p>
             </div>
         </div>
 
         <!-- Info Footer -->
         <div class="text-center opacity-60 mb-8">
-            <p class="mb-3">🔒 All encryption is done in your browser. Nothing is sent to any server.</p>
+            <p class="mb-3">🔐 All encryption is done in your browser. Nothing is sent to any server.</p>
             <p class="text-sm">
-                <a href="https://github.com" target="_blank" class="text-purple-500 hover:underline">View on GitHub</a> • 
-                Version v1.0.0
+                <a href="https://github.com/myst-25/EncryptorX" target="_blank" class="text-purple-500 hover:underline">View on GitHub</a> • 
+                Version v2.0.0
             </p>
         </div>
     </div>
@@ -529,6 +636,8 @@
 
         let derivedKey = null;
         let isKeyLoaded = false;
+        let userName = '';
+        let messageHistory = [];
 
         // Validate ACCSI number
         function validateAccsi(accsi) {
@@ -554,7 +663,6 @@
             if (/[A-Z]/.test(password)) strength += 1;
             if (/[!@#$%^&*()]/.test(password)) strength += 2;
 
-            // Entropy calculation (simplified)
             let charsetSize = 0;
             if (/[a-z]/.test(password)) charsetSize += 26;
             if (/[A-Z]/.test(password)) charsetSize += 26;
@@ -606,8 +714,6 @@
         async function encryptText(plaintext, key) {
             const encoder = new TextEncoder();
             const plaintextBytes = encoder.encode(plaintext);
-
-            // Generate random 12-byte IV
             const iv = crypto.getRandomValues(new Uint8Array(12));
 
             const ciphertext = await crypto.subtle.encrypt(
@@ -616,22 +722,17 @@
                 plaintextBytes
             );
 
-            // Prepend IV to ciphertext
             const combined = new Uint8Array(iv.length + ciphertext.byteLength);
             combined.set(iv);
             combined.set(new Uint8Array(ciphertext), iv.length);
 
-            // Base64 encode
             return btoa(String.fromCharCode(...combined));
         }
 
         // Decrypt text
         async function decryptText(encryptedBase64, key) {
             try {
-                // Base64 decode
                 const combined = Uint8Array.from(atob(encryptedBase64), c => c.charCodeAt(0));
-
-                // Extract IV and ciphertext
                 const iv = combined.slice(0, 12);
                 const ciphertext = combined.slice(12);
 
@@ -703,13 +804,15 @@
         // Load key
         const loadKeyBtn = document.getElementById('loadKeyBtn');
         const accsiInput = document.getElementById('accsiInput');
+        const userNameInput = document.getElementById('userNameInput');
         const credentialsCard = document.getElementById('credentialsCard');
-        const cryptoCard = document.getElementById('cryptoCard');
+        const chatCard = document.getElementById('chatCard');
         const statusBadge = document.getElementById('statusBadge');
 
         loadKeyBtn.addEventListener('click', async () => {
             const accsi = accsiInput.value.trim();
             const password = passwordInput.value;
+            userName = userNameInput.value.trim() || 'Anonymous';
 
             if (!validateAccsi(accsi)) {
                 alert('❌ Invalid ACCSI number. Must be 4-12 digits.');
@@ -728,17 +831,15 @@
                 derivedKey = await deriveKey(accsi, password);
                 isKeyLoaded = true;
 
-                // Update UI
                 credentialsCard.classList.add('success');
-                credentialsCard.innerHTML += '<div class="mt-4 text-green-500 flex items-center gap-2"><i class="fas fa-check-circle"></i> Key loaded successfully!</div>';
-                cryptoCard.style.display = 'block';
-                cryptoCard.classList.add('fade-in');
+                credentialsCard.innerHTML += '<div class="mt-4 text-green-500 flex items-center gap-2"><i class="fas fa-check-circle"></i> Key loaded successfully! Ready to chat.</div>';
+                chatCard.style.display = 'block';
+                chatCard.classList.add('fade-in');
 
                 statusBadge.classList.remove('unready');
                 statusBadge.classList.add('ready');
                 statusBadge.innerHTML = '<span class="text-xl">🟢</span><span>Key Ready</span>';
 
-                // Lock icon animation
                 const lockIcon = document.querySelector('.lock-icon');
                 lockIcon.classList.add('unlock');
 
@@ -747,7 +848,7 @@
             } catch (error) {
                 alert('❌ Error loading key: ' + error.message);
                 loadKeyBtn.disabled = false;
-                loadKeyBtn.innerHTML = '<i class="fas fa-key"></i> Load Key';
+                loadKeyBtn.innerHTML = '<i class="fas fa-key"></i> Load Key & Start Chat';
             }
         });
 
@@ -757,157 +858,105 @@
             if (confirm('Clear session and remove key from memory?')) {
                 derivedKey = null;
                 isKeyLoaded = false;
+                messageHistory = [];
                 location.reload();
             }
         });
 
-        // Tab switching
-        const tabBtns = document.querySelectorAll('.tab-btn');
-        const tabContents = document.querySelectorAll('.tab-content');
+        // Chat functionality
+        const messageInput = document.getElementById('messageInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const chatMessages = document.getElementById('chatMessages');
+        const clearChatBtn = document.getElementById('clearChatBtn');
 
-        tabBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                const tabName = btn.getAttribute('data-tab');
-                tabBtns.forEach(b => b.classList.remove('active'));
-                tabContents.forEach(c => c.classList.remove('active'));
-                btn.classList.add('active');
-                document.getElementById(tabName + '-tab').classList.add('active');
-            });
+        // Auto-resize textarea
+        messageInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 100) + 'px';
         });
 
-        // Encrypt functionality
-        const encryptBtn = document.getElementById('encryptBtn');
-        const encryptInput = document.getElementById('encryptInput');
-        const encryptOutput = document.getElementById('encryptOutput');
-        const copyEncryptBtn = document.getElementById('copyEncryptBtn');
-        const downloadEncryptBtn = document.getElementById('downloadEncryptBtn');
-        const encryptFileInput = document.getElementById('encryptFileInput');
-        const encryptFileBtn = document.getElementById('encryptFileBtn');
-
-        encryptFileBtn.addEventListener('click', () => encryptFileInput.click());
-        encryptFileInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    encryptInput.value = event.target.result;
-                };
-                reader.readAsText(file);
+        // Send message
+        sendBtn.addEventListener('click', sendMessage);
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
             }
         });
 
-        encryptBtn.addEventListener('click', async () => {
+        async function sendMessage() {
             if (!isKeyLoaded) {
                 alert('❌ Key not loaded');
                 return;
             }
 
-            const plaintext = encryptInput.value.trim();
-            if (!plaintext) {
-                alert('❌ Enter text to encrypt');
+            const message = messageInput.value.trim();
+            if (!message) {
+                alert('❌ Enter a message');
                 return;
             }
 
-            encryptBtn.disabled = true;
-            encryptBtn.innerHTML = '<span class="spinner"></span>Encrypting...';
+            sendBtn.disabled = true;
+            sendBtn.innerHTML = '<span class="spinner"></span>Encrypting...';
 
             try {
-                const encrypted = await encryptText(plaintext, derivedKey);
-                encryptOutput.value = encrypted;
-                encryptOutput.parentElement.parentElement.classList.add('success-flash');
-                copyEncryptBtn.style.display = 'flex';
-                downloadEncryptBtn.style.display = 'flex';
-                setTimeout(() => {
-                    encryptOutput.parentElement.parentElement.classList.remove('success-flash');
-                }, 600);
+                const encrypted = await encryptText(message, derivedKey);
+                
+                // Add to message history
+                const timestamp = new Date().toLocaleTimeString();
+                messageHistory.push({
+                    sender: userName,
+                    message: message,
+                    encrypted: encrypted,
+                    timestamp: timestamp,
+                    type: 'sent'
+                });
+
+                // Display message
+                displayMessage(userName, message, timestamp, 'sent');
+                messageInput.value = '';
+                messageInput.style.height = 'auto';
+
+                // Clear initial message
+                if (chatMessages.children.length === 1 && chatMessages.children[0].textContent.includes('Chat started')) {
+                    chatMessages.innerHTML = '';
+                }
             } catch (error) {
                 alert('❌ Encryption error: ' + error.message);
             }
 
-            encryptBtn.disabled = false;
-            encryptBtn.innerHTML = '<i class="fas fa-bolt"></i> Encrypt';
-        });
+            sendBtn.disabled = false;
+            sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Send';
+        }
 
-        copyEncryptBtn.addEventListener('click', () => {
-            navigator.clipboard.writeText(encryptOutput.value);
-            copyEncryptBtn.classList.add('copied');
-            copyEncryptBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
-            setTimeout(() => {
-                copyEncryptBtn.classList.remove('copied');
-                copyEncryptBtn.innerHTML = '<i class="fas fa-copy"></i> Copy';
-            }, 2000);
-        });
+        function displayMessage(sender, message, timestamp, type) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            messageDiv.innerHTML = `
+                <div>
+                    <div class="message-sender">${sender}</div>
+                    <div class="message-bubble">
+                        ${escapeHtml(message)}
+                        <div class="message-time">${timestamp}</div>
+                    </div>
+                </div>
+            `;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
 
-        downloadEncryptBtn.addEventListener('click', () => {
-            const element = document.createElement('a');
-            element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(encryptOutput.value));
-            element.setAttribute('download', 'encrypted_' + Date.now() + '.enc');
-            element.style.display = 'none';
-            document.body.appendChild(element);
-            element.click();
-            document.body.removeChild(element);
-        });
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
 
-        // Decrypt functionality
-        const decryptBtn = document.getElementById('decryptBtn');
-        const decryptInput = document.getElementById('decryptInput');
-        const decryptOutput = document.getElementById('decryptOutput');
-        const copyDecryptBtn = document.getElementById('copyDecryptBtn');
-        const decryptFileInput = document.getElementById('decryptFileInput');
-        const decryptFileBtn = document.getElementById('decryptFileBtn');
-
-        decryptFileBtn.addEventListener('click', () => decryptFileInput.click());
-        decryptFileInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    decryptInput.value = event.target.result;
-                };
-                reader.readAsText(file);
+        // Clear chat
+        clearChatBtn.addEventListener('click', () => {
+            if (confirm('Clear all chat messages?')) {
+                messageHistory = [];
+                chatMessages.innerHTML = '<div class="text-center opacity-50 text-sm"><p>Chat cleared. Messages are encrypted end-to-end.</p></div>';
             }
-        });
-
-        decryptBtn.addEventListener('click', async () => {
-            if (!isKeyLoaded) {
-                alert('❌ Key not loaded');
-                return;
-            }
-
-            const encrypted = decryptInput.value.trim();
-            if (!encrypted) {
-                alert('❌ Paste encrypted text');
-                return;
-            }
-
-            decryptBtn.disabled = true;
-            decryptBtn.innerHTML = '<span class="spinner"></span>Decrypting...';
-
-            try {
-                const decrypted = await decryptText(encrypted, derivedKey);
-                decryptOutput.value = decrypted;
-                decryptOutput.parentElement.parentElement.classList.add('success-flash');
-                copyDecryptBtn.style.display = 'flex';
-                setTimeout(() => {
-                    decryptOutput.parentElement.parentElement.classList.remove('success-flash');
-                }, 600);
-            } catch (error) {
-                decryptOutput.value = '';
-                alert('❌ ' + error.message);
-            }
-
-            decryptBtn.disabled = false;
-            decryptBtn.innerHTML = '<i class="fas fa-unlock"></i> Decrypt';
-        });
-
-        copyDecryptBtn.addEventListener('click', () => {
-            navigator.clipboard.writeText(decryptOutput.value);
-            copyDecryptBtn.classList.add('copied');
-            copyDecryptBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
-            setTimeout(() => {
-                copyDecryptBtn.classList.remove('copied');
-                copyDecryptBtn.innerHTML = '<i class="fas fa-copy"></i> Copy';
-            }, 2000);
         });
 
         // Register service worker
