@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Military-grade AES-256-GCM encryption in your browser">
+    <meta name="theme-color" content="#7c3aed">
+    <title>EncryptorX - Secure Text Encryption</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/svg+xml" href="icon.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.tailwindcss.com" rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        body.dark-mode {
+            background-color: #0f0f1a;
+            color: #e0e0ff;
+        }
+
+        body.light-mode {
+            background-color: #f5f5ff;
+            color: #1a1a2e;
+        }
+
+        .card {
+            transition: all 0.3s ease;
+            border-radius: 12px;
+        }
+
+        body.dark-mode .card {
+            background-color: #1a1a2e;
+            border: 1px solid #2d2d44;
+        }
+
+        body.light-mode .card {
+            background-color: #ffffff;
+            border: 1px solid #e0e0ff;
+        }
+
+        .card.success {
+            border-color: #10b981;
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+        }
+
+        .card.error {
+            animation: shake 0.5s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(124, 58, 237, 0.3);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+            transition: all 0.3s ease;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
+            transition: all 0.3s ease;
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(239, 68, 68, 0.3);
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .lock-icon {
+            width: 80px;
+            height: 80px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .lock-icon.unlock {
+            animation: unlock 0.6s ease-out;
+        }
+
+        @keyframes unlock {
+            0% { transform: rotate(0deg) scale(1); }
+            50% { transform: rotate(-10deg) scale(1.1); }
+            100% { transform: rotate(0deg) scale(1); }
+        }
+
+        .strength-bar {
+            height: 4px;
+            border-radius: 2px;
+            transition: all 0.3s ease;
+            background-color: #ef4444;
+        }
+
+        .strength-bar.fair {
+            background-color: #f97316;
+        }
+
+        .strength-bar.strong {
+            background-color: #eab308;
+        }
+
+        .strength-bar.very-strong {
+            background-color: #10b981;
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid;
+            margin-bottom: 24px;
+        }
+
+        body.dark-mode .tabs {
+            border-bottom-color: #2d2d44;
+        }
+
+        body.light-mode .tabs {
+            border-bottom-color: #e0e0ff;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        body.dark-mode .tab-btn {
+            color: #8b8ba8;
+        }
+
+        body.light-mode .tab-btn {
+            color: #a0a0c0;
+        }
+
+        .tab-btn.active {
+            color: #7c3aed;
+        }
+
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #7c3aed, #a855f7);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .success-flash {
+            animation: successFlash 0.6s ease-out;
+        }
+
+        @keyframes successFlash {
+            0% { background-color: rgba(16, 185, 129, 0.3); }
+            100% { background-color: transparent; }
+        }
+
+        textarea {
+            resize: vertical;
+            font-family: 'Courier New', monospace;
+            transition: all 0.3s ease;
+        }
+
+        body.dark-mode textarea {
+            background-color: #0f0f1a;
+            color: #e0e0ff;
+            border-color: #2d2d44;
+        }
+
+        body.light-mode textarea {
+            background-color: #f9f9ff;
+            color: #1a1a2e;
+            border-color: #e0e0ff;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #7c3aed;
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+        }
+
+        input[type="text"],
+        input[type="password"],
+        input[type="number"] {
+            transition: all 0.3s ease;
+        }
+
+        body.dark-mode input[type="text"],
+        body.dark-mode input[type="password"],
+        body.dark-mode input[type="number"] {
+            background-color: #0f0f1a;
+            color: #e0e0ff;
+            border-color: #2d2d44;
+        }
+
+        body.light-mode input[type="text"],
+        body.light-mode input[type="password"],
+        body.light-mode input[type="number"] {
+            background-color: #f9f9ff;
+            color: #1a1a2e;
+            border-color: #e0e0ff;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #7c3aed;
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        body.dark-mode .status-badge {
+            background-color: #2d2d44;
+        }
+
+        body.light-mode .status-badge {
+            background-color: #e0e0ff;
+        }
+
+        .status-badge.ready {
+            color: #10b981;
+        }
+
+        .status-badge.unready {
+            color: #ef4444;
+        }
+
+        .eye-toggle {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .eye-toggle:hover {
+            color: #7c3aed;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+        }
+
+        .file-input-wrapper input[type="file"] {
+            position: absolute;
+            left: -9999px;
+        }
+
+        .copy-btn, .download-btn {
+            transition: all 0.3s ease;
+        }
+
+        .copy-btn:hover, .download-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .copy-btn.copied {
+            color: #10b981;
+        }
+
+        .navbar {
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        body.dark-mode .navbar {
+            background-color: rgba(15, 15, 26, 0.8);
+            border-bottom: 1px solid #2d2d44;
+        }
+
+        body.light-mode .navbar {
+            background-color: rgba(245, 245, 255, 0.8);
+            border-bottom: 1px solid #e0e0ff;
+        }
+    </style>
+</head>
+<body class="dark-mode">
+    <!-- Navbar -->
+    <nav class="navbar sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <i class="fas fa-lock text-purple-500 text-2xl"></i>
+                <h1 class="text-2xl font-bold">EncryptorX</h1>
+            </div>
+            <div class="flex items-center gap-4">
+                <button id="themeToggle" class="p-2 rounded-lg hover:bg-opacity-20 transition-all" title="Toggle theme">
+                    <i class="fas fa-moon text-2xl"></i>
+                </button>
+                <button id="clearSessionBtn" class="btn-danger text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2">
+                    <i class="fas fa-trash"></i>
+                    Clear Session
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="max-w-4xl mx-auto px-4 py-8">
+        <!-- Hero Section -->
+        <div class="text-center mb-12">
+            <svg class="lock-icon mx-auto mb-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+            <h2 class="text-4xl font-bold mb-3">Your Text. Your Key. Nobody Else.</h2>
+            <p class="text-lg opacity-70 mb-6">Military-grade AES-256-GCM encryption — unique per user</p>
+            <div class="flex justify-center">
+                <span class="status-badge unready" id="statusBadge">
+                    <span class="text-xl">🔴</span>
+                    <span>No Key Loaded</span>
+                </span>
+            </div>
+        </div>
+
+        <!-- Credentials Card -->
+        <div class="card p-8 mb-8" id="credentialsCard">
+            <h3 class="text-2xl font-bold mb-6">Setup Your Key</h3>
+            
+            <div class="mb-6">
+                <label class="block text-sm font-medium mb-2">ACCSI Number</label>
+                <input type="number" id="accsiInput" placeholder="e.g. 8829" class="w-full px-4 py-3 border-2 rounded-lg" min="0" max="999999999999">
+                <p class="text-xs opacity-50 mt-2">4-12 digits</p>
+            </div>
+
+            <div class="mb-6">
+                <label class="block text-sm font-medium mb-2">Password</label>
+                <div class="relative">
+                    <input type="password" id="passwordInput" placeholder="Enter password" class="w-full px-4 py-3 border-2 rounded-lg pr-10">
+                    <button type="button" id="togglePasswordBtn" class="absolute right-3 top-3 eye-toggle">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+                <p class="text-xs opacity-50 mt-2">Min 8 chars, must include: ! @ # $ % ^ & * ( )</p>
+            </div>
+
+            <div class="mb-6">
+                <label class="block text-sm font-medium mb-2">Password Strength</label>
+                <div class="w-full bg-gray-700 rounded-full h-2 overflow-hidden mb-2">
+                    <div class="strength-bar h-full w-0" id="strengthBar"></div>
+                </div>
+                <div class="flex justify-between text-xs opacity-50">
+                    <span id="strengthText">Weak</span>
+                    <span id="entropyText">Entropy: 0 bits</span>
+                </div>
+            </div>
+
+            <button id="loadKeyBtn" class="btn-primary w-full text-white px-6 py-3 rounded-lg font-medium flex items-center justify-center gap-2">
+                <i class="fas fa-key"></i>
+                Load Key
+            </button>
+        </div>
+
+        <!-- Encrypt/Decrypt Card -->
+        <div class="card p-8 mb-8" id="cryptoCard" style="display: none;">
+            <div class="tabs" id="tabs">
+                <button class="tab-btn active" data-tab="encrypt">
+                    <i class="fas fa-lock"></i> Encrypt
+                </button>
+                <button class="tab-btn" data-tab="decrypt">
+                    <i class="fas fa-lock-open"></i> Decrypt
+                </button>
+            </div>
+
+            <!-- Encrypt Tab -->
+            <div class="tab-content active" id="encrypt-tab">
+                <div class="mb-6">
+                    <label class="block text-sm font-medium mb-2">Text to Encrypt</label>
+                    <textarea id="encryptInput" placeholder="Enter text to encrypt..." rows="6" class="w-full px-4 py-3 border-2 rounded-lg"></textarea>
+                </div>
+
+                <div class="mb-6">
+                    <label class="block text-sm font-medium mb-2">Or Upload File</label>
+                    <div class="file-input-wrapper">
+                        <input type="file" id="encryptFileInput">
+                        <button type="button" id="encryptFileBtn" class="w-full btn-primary text-white px-4 py-3 rounded-lg font-medium flex items-center justify-center gap-2">
+                            <i class="fas fa-upload"></i>
+                            Choose File
+                        </button>
+                    </div>
+                </div>
+
+                <button id="encryptBtn" class="btn-primary w-full text-white px-6 py-3 rounded-lg font-medium flex items-center justify-center gap-2 mb-6">
+                    <i class="fas fa-bolt"></i>
+                    Encrypt
+                </button>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-medium mb-2">Encrypted Output</label>
+                    <textarea id="encryptOutput" placeholder="Encrypted text will appear here..." rows="4" class="w-full px-4 py-3 border-2 rounded-lg" readonly></textarea>
+                </div>
+
+                <div class="flex gap-3">
+                    <button id="copyEncryptBtn" class="copy-btn flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium flex items-center justify-center gap-2" style="display: none;">
+                        <i class="fas fa-copy"></i>
+                        Copy
+                    </button>
+                    <button id="downloadEncryptBtn" class="download-btn flex-1 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium flex items-center justify-center gap-2" style="display: none;">
+                        <i class="fas fa-download"></i>
+                        Download .enc
+                    </button>
+                </div>
+            </div>
+
+            <!-- Decrypt Tab -->
+            <div class="tab-content" id="decrypt-tab">
+                <div class="mb-6">
+                    <label class="block text-sm font-medium mb-2">Encrypted Text</label>
+                    <textarea id="decryptInput" placeholder="Paste encrypted text..." rows="6" class="w-full px-4 py-3 border-2 rounded-lg"></textarea>
+                </div>
+
+                <div class="mb-6">
+                    <label class="block text-sm font-medium mb-2">Or Upload .enc File</label>
+                    <div class="file-input-wrapper">
+                        <input type="file" id="decryptFileInput" accept=".enc">
+                        <button type="button" id="decryptFileBtn" class="w-full btn-primary text-white px-4 py-3 rounded-lg font-medium flex items-center justify-center gap-2">
+                            <i class="fas fa-upload"></i>
+                            Choose File
+                        </button>
+                    </div>
+                </div>
+
+                <button id="decryptBtn" class="btn-success w-full text-white px-6 py-3 rounded-lg font-medium flex items-center justify-center gap-2 mb-6">
+                    <i class="fas fa-unlock"></i>
+                    Decrypt
+                </button>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-medium mb-2">Decrypted Output</label>
+                    <textarea id="decryptOutput" placeholder="Decrypted text will appear here..." rows="4" class="w-full px-4 py-3 border-2 rounded-lg" readonly></textarea>
+                </div>
+
+                <button id="copyDecryptBtn" class="copy-btn flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium flex items-center justify-center gap-2" style="display: none;">
+                    <i class="fas fa-copy"></i>
+                    Copy
+                </button>
+            </div>
+        </div>
+
+        <!-- Info Footer -->
+        <div class="text-center opacity-60 mb-8">
+            <p class="mb-3">🔒 All encryption is done in your browser. Nothing is sent to any server.</p>
+            <p class="text-sm">
+                <a href="https://github.com" target="_blank" class="text-purple-500 hover:underline">View on GitHub</a> • 
+                Version v1.0.0
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // ENCRYPTION/DECRYPTION LOGIC
+        // ============================================
+
+        let derivedKey = null;
+        let isKeyLoaded = false;
+
+        // Validate ACCSI number
+        function validateAccsi(accsi) {
+            const num = accsi.toString();
+            return /^\d{4,12}$/.test(num);
+        }
+
+        // Validate password
+        function validatePassword(password) {
+            return password.length >= 8 && /[!@#$%^&*()]/.test(password);
+        }
+
+        // Calculate password strength
+        function calculateStrength(password) {
+            let strength = 0;
+            let entropy = 0;
+
+            if (password.length >= 8) strength += 1;
+            if (password.length >= 12) strength += 1;
+            if (password.length >= 16) strength += 1;
+            if (/[0-9]/.test(password)) strength += 1;
+            if (/[a-z]/.test(password)) strength += 1;
+            if (/[A-Z]/.test(password)) strength += 1;
+            if (/[!@#$%^&*()]/.test(password)) strength += 2;
+
+            // Entropy calculation (simplified)
+            let charsetSize = 0;
+            if (/[a-z]/.test(password)) charsetSize += 26;
+            if (/[A-Z]/.test(password)) charsetSize += 26;
+            if (/[0-9]/.test(password)) charsetSize += 10;
+            if (/[!@#$%^&*()]/.test(password)) charsetSize += 9;
+
+            entropy = Math.round(password.length * Math.log2(charsetSize || 1));
+
+            return { strength: Math.min(strength, 7), entropy };
+        }
+
+        // Derive key using PBKDF2
+        async function deriveKey(accsi, password) {
+            const encoder = new TextEncoder();
+            const accsiBytes = encoder.encode(accsi.toString());
+            const passwordBytes = encoder.encode(password);
+
+            const importedPassword = await crypto.subtle.importKey(
+                'raw',
+                passwordBytes,
+                'PBKDF2',
+                false,
+                ['deriveBits']
+            );
+
+            const derivedBits = await crypto.subtle.deriveBits(
+                {
+                    name: 'PBKDF2',
+                    salt: accsiBytes,
+                    iterations: 250000,
+                    hash: 'SHA-512'
+                },
+                importedPassword,
+                256
+            );
+
+            const key = await crypto.subtle.importKey(
+                'raw',
+                derivedBits,
+                'AES-GCM',
+                false,
+                ['encrypt', 'decrypt']
+            );
+
+            return key;
+        }
+
+        // Encrypt text
+        async function encryptText(plaintext, key) {
+            const encoder = new TextEncoder();
+            const plaintextBytes = encoder.encode(plaintext);
+
+            // Generate random 12-byte IV
+            const iv = crypto.getRandomValues(new Uint8Array(12));
+
+            const ciphertext = await crypto.subtle.encrypt(
+                { name: 'AES-GCM', iv: iv },
+                key,
+                plaintextBytes
+            );
+
+            // Prepend IV to ciphertext
+            const combined = new Uint8Array(iv.length + ciphertext.byteLength);
+            combined.set(iv);
+            combined.set(new Uint8Array(ciphertext), iv.length);
+
+            // Base64 encode
+            return btoa(String.fromCharCode(...combined));
+        }
+
+        // Decrypt text
+        async function decryptText(encryptedBase64, key) {
+            try {
+                // Base64 decode
+                const combined = Uint8Array.from(atob(encryptedBase64), c => c.charCodeAt(0));
+
+                // Extract IV and ciphertext
+                const iv = combined.slice(0, 12);
+                const ciphertext = combined.slice(12);
+
+                const plaintext = await crypto.subtle.decrypt(
+                    { name: 'AES-GCM', iv: iv },
+                    key,
+                    ciphertext
+                );
+
+                const decoder = new TextDecoder();
+                return decoder.decode(plaintext);
+            } catch (error) {
+                throw new Error('Invalid credentials or corrupted data');
+            }
+        }
+
+        // ============================================
+        // UI LOGIC
+        // ============================================
+
+        // Theme toggle
+        const themeToggle = document.getElementById('themeToggle');
+        themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            document.body.classList.toggle('light-mode');
+            const icon = themeToggle.querySelector('i');
+            if (document.body.classList.contains('dark-mode')) {
+                icon.classList.remove('fa-sun');
+                icon.classList.add('fa-moon');
+            } else {
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+            }
+        });
+
+        // Password visibility toggle
+        const togglePasswordBtn = document.getElementById('togglePasswordBtn');
+        const passwordInput = document.getElementById('passwordInput');
+        togglePasswordBtn.addEventListener('click', () => {
+            const isPassword = passwordInput.type === 'password';
+            passwordInput.type = isPassword ? 'text' : 'password';
+            togglePasswordBtn.querySelector('i').classList.toggle('fa-eye');
+            togglePasswordBtn.querySelector('i').classList.toggle('fa-eye-slash');
+        });
+
+        // Password strength indicator
+        const passwordInputElem = document.getElementById('passwordInput');
+        const strengthBar = document.getElementById('strengthBar');
+        const strengthText = document.getElementById('strengthText');
+        const entropyText = document.getElementById('entropyText');
+
+        passwordInputElem.addEventListener('input', () => {
+            const { strength, entropy } = calculateStrength(passwordInputElem.value);
+            const percentage = (strength / 7) * 100;
+            strengthBar.style.width = percentage + '%';
+
+            const levels = ['Weak', 'Fair', 'Strong', 'Very Strong'];
+            const levelIndex = Math.floor(strength / 2);
+            strengthText.textContent = levels[Math.min(levelIndex, 3)];
+            entropyText.textContent = `Entropy: ${entropy} bits`;
+
+            strengthBar.classList.remove('fair', 'strong', 'very-strong');
+            if (strength <= 2) strengthBar.classList.add('weak');
+            else if (strength <= 4) strengthBar.classList.add('fair');
+            else if (strength <= 5) strengthBar.classList.add('strong');
+            else strengthBar.classList.add('very-strong');
+        });
+
+        // Load key
+        const loadKeyBtn = document.getElementById('loadKeyBtn');
+        const accsiInput = document.getElementById('accsiInput');
+        const credentialsCard = document.getElementById('credentialsCard');
+        const cryptoCard = document.getElementById('cryptoCard');
+        const statusBadge = document.getElementById('statusBadge');
+
+        loadKeyBtn.addEventListener('click', async () => {
+            const accsi = accsiInput.value.trim();
+            const password = passwordInput.value;
+
+            if (!validateAccsi(accsi)) {
+                alert('❌ Invalid ACCSI number. Must be 4-12 digits.');
+                return;
+            }
+
+            if (!validatePassword(password)) {
+                alert('❌ Invalid password. Min 8 chars, must include special char: ! @ # $ % ^ & * ( )');
+                return;
+            }
+
+            loadKeyBtn.disabled = true;
+            loadKeyBtn.innerHTML = '<span class="spinner"></span>Loading Key...';
+
+            try {
+                derivedKey = await deriveKey(accsi, password);
+                isKeyLoaded = true;
+
+                // Update UI
+                credentialsCard.classList.add('success');
+                credentialsCard.innerHTML += '<div class="mt-4 text-green-500 flex items-center gap-2"><i class="fas fa-check-circle"></i> Key loaded successfully!</div>';
+                cryptoCard.style.display = 'block';
+                cryptoCard.classList.add('fade-in');
+
+                statusBadge.classList.remove('unready');
+                statusBadge.classList.add('ready');
+                statusBadge.innerHTML = '<span class="text-xl">🟢</span><span>Key Ready</span>';
+
+                // Lock icon animation
+                const lockIcon = document.querySelector('.lock-icon');
+                lockIcon.classList.add('unlock');
+
+                loadKeyBtn.disabled = false;
+                loadKeyBtn.innerHTML = '<i class="fas fa-key"></i> Key Loaded ✓';
+            } catch (error) {
+                alert('❌ Error loading key: ' + error.message);
+                loadKeyBtn.disabled = false;
+                loadKeyBtn.innerHTML = '<i class="fas fa-key"></i> Load Key';
+            }
+        });
+
+        // Clear session
+        const clearSessionBtn = document.getElementById('clearSessionBtn');
+        clearSessionBtn.addEventListener('click', () => {
+            if (confirm('Clear session and remove key from memory?')) {
+                derivedKey = null;
+                isKeyLoaded = false;
+                location.reload();
+            }
+        });
+
+        // Tab switching
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const tabName = btn.getAttribute('data-tab');
+                tabBtns.forEach(b => b.classList.remove('active'));
+                tabContents.forEach(c => c.classList.remove('active'));
+                btn.classList.add('active');
+                document.getElementById(tabName + '-tab').classList.add('active');
+            });
+        });
+
+        // Encrypt functionality
+        const encryptBtn = document.getElementById('encryptBtn');
+        const encryptInput = document.getElementById('encryptInput');
+        const encryptOutput = document.getElementById('encryptOutput');
+        const copyEncryptBtn = document.getElementById('copyEncryptBtn');
+        const downloadEncryptBtn = document.getElementById('downloadEncryptBtn');
+        const encryptFileInput = document.getElementById('encryptFileInput');
+        const encryptFileBtn = document.getElementById('encryptFileBtn');
+
+        encryptFileBtn.addEventListener('click', () => encryptFileInput.click());
+        encryptFileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    encryptInput.value = event.target.result;
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        encryptBtn.addEventListener('click', async () => {
+            if (!isKeyLoaded) {
+                alert('❌ Key not loaded');
+                return;
+            }
+
+            const plaintext = encryptInput.value.trim();
+            if (!plaintext) {
+                alert('❌ Enter text to encrypt');
+                return;
+            }
+
+            encryptBtn.disabled = true;
+            encryptBtn.innerHTML = '<span class="spinner"></span>Encrypting...';
+
+            try {
+                const encrypted = await encryptText(plaintext, derivedKey);
+                encryptOutput.value = encrypted;
+                encryptOutput.parentElement.parentElement.classList.add('success-flash');
+                copyEncryptBtn.style.display = 'flex';
+                downloadEncryptBtn.style.display = 'flex';
+                setTimeout(() => {
+                    encryptOutput.parentElement.parentElement.classList.remove('success-flash');
+                }, 600);
+            } catch (error) {
+                alert('❌ Encryption error: ' + error.message);
+            }
+
+            encryptBtn.disabled = false;
+            encryptBtn.innerHTML = '<i class="fas fa-bolt"></i> Encrypt';
+        });
+
+        copyEncryptBtn.addEventListener('click', () => {
+            navigator.clipboard.writeText(encryptOutput.value);
+            copyEncryptBtn.classList.add('copied');
+            copyEncryptBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+            setTimeout(() => {
+                copyEncryptBtn.classList.remove('copied');
+                copyEncryptBtn.innerHTML = '<i class="fas fa-copy"></i> Copy';
+            }, 2000);
+        });
+
+        downloadEncryptBtn.addEventListener('click', () => {
+            const element = document.createElement('a');
+            element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(encryptOutput.value));
+            element.setAttribute('download', 'encrypted_' + Date.now() + '.enc');
+            element.style.display = 'none';
+            document.body.appendChild(element);
+            element.click();
+            document.body.removeChild(element);
+        });
+
+        // Decrypt functionality
+        const decryptBtn = document.getElementById('decryptBtn');
+        const decryptInput = document.getElementById('decryptInput');
+        const decryptOutput = document.getElementById('decryptOutput');
+        const copyDecryptBtn = document.getElementById('copyDecryptBtn');
+        const decryptFileInput = document.getElementById('decryptFileInput');
+        const decryptFileBtn = document.getElementById('decryptFileBtn');
+
+        decryptFileBtn.addEventListener('click', () => decryptFileInput.click());
+        decryptFileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    decryptInput.value = event.target.result;
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        decryptBtn.addEventListener('click', async () => {
+            if (!isKeyLoaded) {
+                alert('❌ Key not loaded');
+                return;
+            }
+
+            const encrypted = decryptInput.value.trim();
+            if (!encrypted) {
+                alert('❌ Paste encrypted text');
+                return;
+            }
+
+            decryptBtn.disabled = true;
+            decryptBtn.innerHTML = '<span class="spinner"></span>Decrypting...';
+
+            try {
+                const decrypted = await decryptText(encrypted, derivedKey);
+                decryptOutput.value = decrypted;
+                decryptOutput.parentElement.parentElement.classList.add('success-flash');
+                copyDecryptBtn.style.display = 'flex';
+                setTimeout(() => {
+                    decryptOutput.parentElement.parentElement.classList.remove('success-flash');
+                }, 600);
+            } catch (error) {
+                decryptOutput.value = '';
+                alert('❌ ' + error.message);
+            }
+
+            decryptBtn.disabled = false;
+            decryptBtn.innerHTML = '<i class="fas fa-unlock"></i> Decrypt';
+        });
+
+        copyDecryptBtn.addEventListener('click', () => {
+            navigator.clipboard.writeText(decryptOutput.value);
+            copyDecryptBtn.classList.add('copied');
+            copyDecryptBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+            setTimeout(() => {
+                copyDecryptBtn.classList.remove('copied');
+                copyDecryptBtn.innerHTML = '<i class="fas fa-copy"></i> Copy';
+            }, 2000);
+        });
+
+        // Register service worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').catch(err => console.log('SW registration failed:', err));
+        }
+    </script>
+</body>
+</html>

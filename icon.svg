@@ -1,0 +1,24 @@
+<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="purpleGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#7c3aed;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#a855f7;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="512" height="512" fill="#0f0f1a"/>
+  
+  <!-- Lock body -->
+  <rect x="156" y="224" width="200" height="200" rx="20" fill="url(#purpleGradient)"/>
+  
+  <!-- Lock shackle -->
+  <path d="M 206 224 Q 206 120 256 120 Q 306 120 306 224" stroke="url(#purpleGradient)" stroke-width="40" fill="none" stroke-linecap="round"/>
+  
+  <!-- Keyhole -->
+  <circle cx="256" cy="300" r="20" fill="#0f0f1a"/>
+  <rect x="246" y="320" width="20" height="40" fill="#0f0f1a"/>
+  
+  <!-- Shine effect -->
+  <ellipse cx="200" cy="260" rx="30" ry="50" fill="white" opacity="0.1"/>
+</svg>
